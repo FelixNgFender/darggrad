@@ -57,7 +57,7 @@ impl Value {
                     rhs.grad = lhs.data;
                 }
             }
-            op.children().for_each(|child: &mut Value| {
+            op.children().for_each(|child| {
                 // chain rule
                 child.grad *= self.grad;
                 child._backward();
@@ -292,11 +292,11 @@ mod tests {
                                 assert_eq!(b_val.grad, 3.0); // chain rule: 1 * c = 1 * 3
                                 assert_eq!(c_val.grad, 2.0); // chain rule: 1 * b = 1 * 2
                             }
-                            _ => panic!("Expected Mul operation for bc"),
+                            _ => panic!("expected mul operation for bc"),
                         }
                     }
                 }
-                _ => panic!("Expected Add operation for result"),
+                _ => panic!("expected add operation for result"),
             }
         }
     }
