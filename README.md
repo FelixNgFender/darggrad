@@ -89,4 +89,4 @@ Why wrap `Value` in shared and mutable smart pointer.
 
 Choosing between `Box`, `Arc`, `Rc`, `Cell`, `RefCell`, `Mutex`.
 
-![Choosing between `Box`, `Arc`, `Rc`, `Cell`, `RefCell`, `Mutex`](media/box_arc_rc_cell_refcell_mutex.png)
+[Choosing between `Box`, `Arc`, `Rc`, `Cell`, `RefCell`, `Mutex`](media/box-arc-rc-cell-refcell-mutex.png)
