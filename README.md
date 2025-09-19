@@ -90,3 +90,6 @@ Why wrap `Value` in shared and mutable smart pointer.
 Choosing between `Box`, `Arc`, `Rc`, `Cell`, `RefCell`, `Mutex`.
 
 [Choosing between `Box`, `Arc`, `Rc`, `Cell`, `RefCell`, `Mutex`](media/box-arc-rc-cell-refcell-mutex.png)
+
+We use `Rc<RefCell<Value>>` for simplicity (shared, single-threaded, mutable
+through interior mutability).
