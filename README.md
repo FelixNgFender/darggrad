@@ -7,6 +7,8 @@ less than zero).
 
 Works on scalar values only.
 
+Also includes a two-layer multi-layer perceptron (MLP) neural network example.
+
 ## Notes
 
 ### Backpropagation
@@ -81,7 +83,28 @@ In a neural network, there are many neurons like so organized in layers.
 When applied to the context of backprop, we are most interested in how the loss
 is affected by the neuron's weights.
 
-#### Design decision tidbits
+#### Multi-layer perceptron (MLP)
+
+A simple type of neural network where neurons are organized in layers, and each
+neuron in one layer is connected to every neuron in the next layer.
+
+![Multi-layer perceptron](media/multi-layer-perceptron.png)
+
+#### Basic training loop
+
+1. Have a set of inputs
+1. Initialize network weights and biases (parameters)
+1. Perform a forward pass to compute the output, and subsequently the loss
+1. IMPORTANT: Flush the gradients of all parameters to zero to make sure we
+   don't accumulate gradients from previous iterations
+1. Perform a backward pass to compute gradients of the loss with respect to each
+   parameter
+1. Update each parameter value using their gradient and a set learning rate
+   (although a scheduler is often used to adjust the learning rate over time
+   according to the loss trajectory during training)
+1. Perform steps 3-5 for many iterations until the loss is minimized
+
+## Design decision tidbits
 
 Why wrap `Value` in shared and mutable smart pointer.
 
@@ -93,3 +116,7 @@ Choosing between `Box`, `Arc`, `Rc`, `Cell`, `RefCell`, `Mutex`.
 
 We use `Rc<RefCell<Value>>` for simplicity (shared, single-threaded, mutable
 through interior mutability).
+
+In PyTorch, you have to declare that a leaf node requires gradient
+(`.requires_grad = True`). PyTorch doesn't track gradients on leaf nodes for
+efficiency reasons.
