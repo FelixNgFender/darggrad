@@ -110,8 +110,9 @@ impl Value {
         self.inner.borrow().op.clone()
     }
 
-    fn set_op(&self, op: Option<Op>) {
+    fn with_op(self, op: Option<Op>) -> Self {
         self.inner.borrow_mut().op = op;
+        self
     }
 
     pub fn set_grad(&self, val: f32) {
@@ -280,9 +281,7 @@ impl Add for Value {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        let res = Self::new(self.data() + rhs.data());
-        res.set_op(Op::Add { lhs: self, rhs }.into());
-        res
+        Self::new(self.data() + rhs.data()).with_op(Op::Add { lhs: self, rhs }.into())
     }
 }
 
@@ -312,9 +311,7 @@ impl Neg for Value {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        let res = Self::new(-self.data());
-        res.set_op(Op::Neg { input: self }.into());
-        res
+        Self::new(-self.data()).with_op(Op::Neg { input: self }.into())
     }
 }
 
@@ -322,9 +319,7 @@ impl Sub for Value {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        let res = Self::new(self.data() - rhs.data());
-        res.set_op(Op::Sub { lhs: self, rhs }.into());
-        res
+        Self::new(self.data() - rhs.data()).with_op(Op::Sub { lhs: self, rhs }.into())
     }
 }
 
@@ -348,9 +343,7 @@ impl Mul for Value {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let res = Self::new(self.data() * rhs.data());
-        res.set_op(Op::Mul { lhs: self, rhs }.into());
-        res
+        Self::new(self.data() * rhs.data()).with_op(Op::Mul { lhs: self, rhs }.into())
     }
 }
 
@@ -374,9 +367,7 @@ impl Div for Value {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
-        let res = Self::new(self.data() / rhs.data());
-        res.set_op(Op::Div { lhs: self, rhs }.into());
-        res
+        Self::new(self.data() / rhs.data()).with_op(Op::Div { lhs: self, rhs }.into())
     }
 }
 
@@ -402,9 +393,8 @@ pub trait Tanh {
 
 impl Tanh for Value {
     fn tanh(self) -> Self {
-        let res = Self::new(((self.data() * 2.0).exp() - 1.0) / ((self.data() * 2.0).exp() + 1.0));
-        res.set_op(Op::Tanh { input: self }.into());
-        res
+        Self::new(((self.data() * 2.0).exp() - 1.0) / ((self.data() * 2.0).exp() + 1.0))
+            .with_op(Op::Tanh { input: self }.into())
     }
 }
 
@@ -414,9 +404,7 @@ trait Relu {
 
 impl Relu for Value {
     fn relu(self) -> Self {
-        let res = Self::new(self.data().max(0.0));
-        res.set_op(Op::Relu { input: self }.into());
-        res
+        Self::new(self.data().max(0.0)).with_op(Op::Relu { input: self }.into())
     }
 }
 
@@ -430,9 +418,7 @@ impl Exp for Value {
     type Output = Value;
 
     fn exp(self) -> Self::Output {
-        let res = Self::new(self.data().exp());
-        res.set_op(Op::Exp { exp: self }.into());
-        res
+        Self::new(self.data().exp()).with_op(Op::Exp { exp: self }.into())
     }
 }
 
@@ -446,15 +432,13 @@ impl Powf for Value {
     type Output = Value;
 
     fn powf(self, exp: f32) -> Self::Output {
-        let res = Self::new(self.data().powf(exp));
-        res.set_op(
+        Self::new(self.data().powf(exp)).with_op(
             Op::Powf {
                 base: self,
                 exp: Value::new(exp),
             }
             .into(),
-        );
-        res
+        )
     }
 }
 
