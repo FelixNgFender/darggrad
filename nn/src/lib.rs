@@ -1,6 +1,6 @@
 use rand_distr::{Distribution, Uniform};
 
-use crate::engine::{Powf, Tanh, Value};
+use autograd::{Powf, Tanh, Value};
 
 pub trait Parameters {
     fn parameters(&self) -> Vec<&Value>;

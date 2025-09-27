@@ -133,11 +133,11 @@ impl Value {
                     rhs.increase_grad(1.0 * self.grad());
                 }
                 Op::Neg { input } => {
-                    input.increase_grad(-1.0 * self.grad());
+                    input.increase_grad(-self.grad());
                 }
                 Op::Sub { lhs, rhs } => {
                     lhs.increase_grad(1.0 * self.grad());
-                    rhs.increase_grad(-1.0 * self.grad());
+                    rhs.increase_grad(-self.grad());
                 }
                 Op::Mul { lhs, rhs } => {
                     lhs.increase_grad(rhs.data() * self.grad());
@@ -398,7 +398,7 @@ impl Tanh for Value {
     }
 }
 
-trait Relu {
+pub trait Relu {
     fn relu(self) -> Self;
 }
 
@@ -408,7 +408,7 @@ impl Relu for Value {
     }
 }
 
-trait Exp {
+pub trait Exp {
     type Output;
 
     fn exp(self) -> Self::Output;

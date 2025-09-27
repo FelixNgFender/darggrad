@@ -1,0 +1,9 @@
+[package]
+name = "demo"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dotenvy = "0.15.7"
+polars = { version = "0.51.0", features = ["lazy", "parquet"] }
+nn = { path = "../nn" }
