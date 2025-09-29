@@ -1,6 +1,6 @@
 use rand_distr::{Distribution, Uniform};
 
-use autograd::{Powf, Tanh, Value};
+use ukiyo_autograd::{Powf, Tanh, Value};
 
 pub trait Parameters {
     fn parameters(&self) -> Vec<&Value>;

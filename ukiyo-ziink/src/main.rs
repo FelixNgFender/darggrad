@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::Path};
 
-use nn::Mlp;
 use polars::prelude::*;
+use ukiyo_nn::Mlp;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenvy::from_path(Path::new(".env"))?;
