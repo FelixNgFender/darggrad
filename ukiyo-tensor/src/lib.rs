@@ -1,9 +1,10 @@
+#![allow(dead_code)]
 use std::{
     fmt::{Debug, Display},
     ops::{Index, IndexMut, RangeInclusive},
 };
 
-use num_traits::Zero;
+use num_traits::{One, Zero};
 
 #[derive(Debug, Clone)]
 struct TensorShape {
@@ -32,8 +33,16 @@ impl TensorShape {
         self.shape.iter().product()
     }
 
+    fn dim(&self) -> usize {
+        self.shape.len()
+    }
+
     fn is_scalar(&self) -> bool {
         self.shape.is_empty()
+    }
+
+    fn is_vector(&self) -> bool {
+        self.shape.len() == 1
     }
 
     /// Converts n-dimensional indices to a linear index.
@@ -69,14 +78,14 @@ impl TensorShape {
     }
 
     /// Permutes the dimensions of the tensor shape according to the given axes.
-    fn permute(&self, permuted_indices: &[usize]) -> Self {
+    fn permute(&self, axes: &[usize]) -> Self {
         assert_eq!(
-            permuted_indices.len(),
+            axes.len(),
             self.shape.len(),
             "Axes length must match tensor shape dimensions"
         );
-        let shape = permuted_indices.iter().map(|&i| self.shape[i]).collect();
-        let strides = permuted_indices.iter().map(|&i| self.strides[i]).collect();
+        let shape = axes.iter().map(|&i| self.shape[i]).collect();
+        let strides = axes.iter().map(|&i| self.strides[i]).collect();
         Self {
             shape,
             strides,
@@ -481,7 +490,7 @@ pub struct Tensor<T> {
 }
 
 impl<T> Tensor<T> {
-    fn map<F, U>(&self, f: F) -> Tensor<U>
+    pub fn map<F, U>(&self, f: F) -> Tensor<U>
     where
         F: Fn(&T) -> U,
     {
@@ -490,11 +499,31 @@ impl<T> Tensor<T> {
             storage: self.storage.map(f),
         }
     }
+
+    /// Since storage is cloned in many operations, provide the "correct" way to view the tensor
+    /// data according to its shape.
+    pub fn data(&self) -> Vec<&T> {
+        let mut res = vec![];
+        let mut current_indices = vec![0; self.shape.dim()];
+        let mut current_dim = current_indices.len() - 1;
+        loop {
+            let value = &self.storage.data[self.shape.ravel_index(&current_indices)];
+            res.push(value);
+            current_indices[current_dim] += 1;
+            if current_indices[current_dim] >= self.shape.shape[current_dim] - 1 {
+                if current_dim == 0 {
+                    break;
+                }
+                current_dim -= 1;
+            }
+        }
+        res
+    }
 }
 
 impl<T: Clone> Tensor<T> {
     /// Permutes the dimensions of the tensor shape according to the given axes.
-    fn permute(&self, axes: &[usize]) -> Self {
+    pub fn permute(&self, axes: &[usize]) -> Self {
         Self {
             shape: self.shape.permute(axes),
             storage: self.storage.clone(), // PERF:
@@ -502,7 +531,7 @@ impl<T: Clone> Tensor<T> {
     }
 
     /// Merges a range of dimensions into a single dimension.
-    fn merge(&self, dim_range: RangeInclusive<usize>) -> Self {
+    pub fn merge(&self, dim_range: RangeInclusive<usize>) -> Self {
         Self {
             shape: self.shape.merge(dim_range),
             storage: self.storage.clone(), // PERF:
@@ -510,7 +539,7 @@ impl<T: Clone> Tensor<T> {
     }
 
     /// Splits a dimension into multiple dimensions according to the given shape.
-    fn split(&self, dim: usize, shape: &[usize]) -> Self {
+    pub fn split(&self, dim: usize, shape: &[usize]) -> Self {
         Tensor {
             shape: self.shape.split(dim, shape),
             storage: self.storage.clone(), // PERF:
@@ -518,7 +547,7 @@ impl<T: Clone> Tensor<T> {
     }
 
     /// Slices the tensor along a specified dimension using an inclusive range.
-    fn slice(&self, dim: usize, range: RangeInclusive<usize>) -> Self {
+    pub fn slice(&self, dim: usize, range: RangeInclusive<usize>) -> Self {
         Tensor {
             shape: self.shape.slice(dim, range),
             storage: self.storage.clone(), // PERF:
@@ -526,7 +555,7 @@ impl<T: Clone> Tensor<T> {
     }
 
     /// Skips elements in a specified dimension by a given step size.
-    fn skip(&self, dim: usize, step: usize) -> Self {
+    pub fn skip(&self, dim: usize, step: usize) -> Self {
         Tensor {
             shape: self.shape.skip(dim, step),
             storage: self.storage.clone(), // PERF:
@@ -592,6 +621,17 @@ impl<T: Zero + Clone> Tensor<T> {
             shape: result_shape,
             storage: result_storage,
         }
+    }
+}
+
+impl<T: One + Clone> Tensor<T> {
+    /// Creates a tensor filled with ones given a shape.
+    pub fn ones(shape: Vec<usize>) -> Self {
+        let shape = TensorShape::new(shape);
+        let storage = TensorStorage {
+            data: vec![T::one(); shape.size()],
+        };
+        Self { shape, storage }
     }
 }
 
