@@ -19,7 +19,7 @@ fn main() {
         .map(|(&c, &i)| (i, c))
         .collect::<HashMap<_, _>>();
 
-    let mut b = Tensor::<i32>::zeros(&[chars.len(), chars.len()]);
+    let mut b = Tensor::<i32>::zeros(vec![chars.len(), chars.len()]);
     file.lines().for_each(|line| {
         let chs = once(TERM_TOK).chain(line.chars()).chain(once(TERM_TOK));
         chs.clone().zip(chs.skip(1)).for_each(|bigram| {
