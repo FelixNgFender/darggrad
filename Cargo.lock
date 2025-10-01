@@ -2890,6 +2890,8 @@ name = "ukiyo-tensor"
 version = "0.1.0"
 dependencies = [
  "num-traits",
+ "rand",
+ "rand_distr",
 ]
 
 [[package]]
