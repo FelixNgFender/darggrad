@@ -1,29 +1,39 @@
 use std::{
-    fmt::Debug,
+    fmt::{Debug, Display},
     ops::{Index, IndexMut},
 };
 
-use num_traits::Zero;
+use num_traits::{One, Zero};
 
 use crate::tensor_shape::TensorShape;
 
-#[derive(Debug, Clone)]
-pub(crate) struct TensorStorage<T> {
+pub(crate) trait TensorItem:
+    Zero + One + Clone + Copy + PartialOrd + Display + Debug
+{
+}
+
+impl TensorItem for u8 {}
+impl TensorItem for i16 {}
+impl TensorItem for i32 {}
+impl TensorItem for f32 {}
+impl TensorItem for f64 {}
+
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
+pub(crate) struct TensorStorage<T: TensorItem> {
     pub(crate) data: Vec<T>,
 }
 
-impl<T> TensorStorage<T> {
+impl<T: TensorItem> TensorStorage<T> {
     pub(crate) fn map<F, U>(&self, f: F) -> TensorStorage<U>
     where
         F: Fn(&T) -> U,
+        U: TensorItem,
     {
         TensorStorage {
             data: self.data.iter().map(f).collect(),
         }
     }
-}
 
-impl<T: Clone> TensorStorage<T> {
     pub(crate) fn reduce<F>(
         &self,
         shape: &TensorShape,
@@ -94,7 +104,7 @@ impl<T: Clone> TensorStorage<T> {
     }
 
     /// Performs an element-wise binary operation between two tensors with broadcasting.
-    pub(crate) fn broadcast_op<F, U, T2>(
+    pub(crate) fn broadcast_op<F, U: TensorItem, T2: TensorItem>(
         &self,
         self_shape: &TensorShape,
         other: &TensorStorage<T2>,
@@ -104,7 +114,6 @@ impl<T: Clone> TensorStorage<T> {
     ) -> TensorStorage<U>
     where
         F: Fn(&T, &T2) -> U,
-        U: Zero + Clone,
     {
         let result_shape = self_shape.broadcast_shape(other_shape, corresponding_dimensions);
         let mut result = TensorStorage::<U>::zeros(result_shape.size());
@@ -169,9 +178,7 @@ impl<T: Clone> TensorStorage<T> {
 
         result
     }
-}
 
-impl<T: Zero + Clone> TensorStorage<T> {
     pub(crate) fn zeros(size: usize) -> Self {
         Self {
             data: vec![T::zero(); size],
@@ -179,7 +186,7 @@ impl<T: Zero + Clone> TensorStorage<T> {
     }
 }
 
-impl<T> Index<usize> for TensorStorage<T> {
+impl<T: TensorItem> Index<usize> for TensorStorage<T> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -187,7 +194,7 @@ impl<T> Index<usize> for TensorStorage<T> {
     }
 }
 
-impl<T> IndexMut<usize> for TensorStorage<T> {
+impl<T: TensorItem> IndexMut<usize> for TensorStorage<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.data[index]
     }

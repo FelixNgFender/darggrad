@@ -1,9 +1,9 @@
 use rand_distr::{Distribution, Uniform};
 
-use ukiyo_autograd::{Powf, Tanh, Value};
+use ukiyo_tensor::{Powf, Tanh, Tensor};
 
 pub trait Parameters {
-    fn parameters(&self) -> Vec<&Value>;
+    fn parameters(&self) -> Vec<&Tensor>;
     /// Sets all gradients of the parameters to zero
     fn zero_grad(&self) {
         self.parameters().iter().for_each(|p| p.set_grad(0.0));
@@ -11,8 +11,8 @@ pub trait Parameters {
 }
 
 struct Neuron {
-    weights: Vec<Value>,
-    bias: Value,
+    weights: Vec<Tensor>,
+    bias: Tensor,
 }
 
 impl Neuron {
@@ -23,21 +23,23 @@ impl Neuron {
             .expect("Failed to create uniform distribution: invalid range");
 
         Self {
-            weights: (0..nin).map(|_| Value::new(die.sample(&mut rng))).collect(),
-            bias: Value::new(die.sample(&mut rng)),
+            weights: (0..nin)
+                .map(|_| Tensor::new(die.sample(&mut rng)))
+                .collect(),
+            bias: Tensor::new(die.sample(&mut rng)),
         }
     }
 
     /// Returns the dot product of inputs and weights plus bias
     /// inputs.len must == self.weights.length
-    fn forward(&self, inputs: &[f32]) -> Value {
+    fn forward(&self, inputs: &[f32]) -> Tensor {
         let raw = self
             .weights
             .iter()
             .cloned()
             .zip(inputs.iter().cloned())
             .map(|(wi, xi)| wi * xi)
-            .sum::<Value>()
+            .sum::<Tensor>()
             + self.bias.clone();
         // pass through activation function
         raw.tanh()
@@ -46,13 +48,12 @@ impl Neuron {
 
 impl Parameters for Neuron {
     /// Returns the tuneable knobs of the neuron: weights and bias
-    fn parameters(&self) -> Vec<&Value> {
+    fn parameters(&self) -> Vec<&Tensor> {
         let mut params = self.weights.iter().collect::<Vec<_>>();
         params.push(&self.bias);
         params
     }
 }
-
 struct Layer {
     neurons: Vec<Neuron>,
 }
@@ -65,14 +66,14 @@ impl Layer {
         }
     }
 
-    fn forward(&self, inputs: &[f32]) -> Vec<Value> {
+    fn forward(&self, inputs: &[f32]) -> Vec<Tensor> {
         self.neurons.iter().map(|n| n.forward(inputs)).collect()
     }
 }
 
 impl Parameters for Layer {
     /// Returns the parameters of all neurons
-    fn parameters(&self) -> Vec<&Value> {
+    fn parameters(&self) -> Vec<&Tensor> {
         self.neurons
             .iter()
             .flat_map(|n| n.parameters().into_iter())
@@ -100,8 +101,8 @@ impl Mlp {
         }
     }
 
-    pub fn forward(&self, inputs: &[f32]) -> Vec<Value> {
-        let mut x = inputs.iter().cloned().map(Value::new).collect::<Vec<_>>();
+    pub fn forward(&self, inputs: &[f32]) -> Vec<Tensor> {
+        let mut x = inputs.iter().cloned().map(Tensor::new).collect::<Vec<_>>();
         for layer in &self.layers {
             x = layer.forward(x.iter().map(|v| v.data()).collect::<Vec<_>>().as_slice());
         }
@@ -115,7 +116,7 @@ impl Mlp {
             .iter()
             .zip(ypred)
             .map(|(ygt, mut yout)| (yout.pop().expect("yout cannot be empty") - *ygt).powf(2.0))
-            .sum::<Value>();
+            .sum::<Tensor>();
         println!("loss = {:.4}", loss.data());
 
         // flush the gradients so gradients from previous step do not accumulate
@@ -133,7 +134,7 @@ impl Mlp {
 
 impl Parameters for Mlp {
     /// Returns the parameters of all layers
-    fn parameters(&self) -> Vec<&Value> {
+    fn parameters(&self) -> Vec<&Tensor> {
         self.layers
             .iter()
             .flat_map(|l| l.parameters().into_iter())

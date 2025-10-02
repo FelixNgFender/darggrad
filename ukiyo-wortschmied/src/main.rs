@@ -5,7 +5,7 @@ use rand::SeedableRng;
 use rand::rngs::StdRng;
 use rand_distr::weighted::WeightedIndex;
 use rand_distr::{Distribution, StandardNormal};
-use ukiyo_tensor::Tensor;
+use ukiyo_tensor::TensorImpl;
 
 fn main() {
     let file = include_str!("names.txt");
@@ -23,7 +23,7 @@ fn main() {
         .map(|(&c, &i)| (i, c))
         .collect::<HashMap<_, _>>();
 
-    let mut bigrams = Tensor::<i32>::zeros(vec![chars.len(), chars.len()]);
+    let mut bigrams = TensorImpl::<i32>::zeros(vec![chars.len(), chars.len()]);
     file.lines().for_each(|line| {
         let chs = once(TERM_TOK).chain(line.chars()).chain(once(TERM_TOK));
         chs.clone().zip(chs.skip(1)).for_each(|bigram| {
@@ -85,23 +85,23 @@ fn main() {
             ys.push(ix2);
         });
     });
-    let xs_tensor = Tensor::<usize>::new(xs.clone(), vec![5]);
-    let ys_tensor = Tensor::<usize>::new(ys.clone(), vec![5]);
-    let weights = Tensor::<f32>::rand_with::<StandardNormal>(
+    let xs_tensor = TensorImpl::<usize>::new(xs.clone(), vec![5]);
+    let ys_tensor = TensorImpl::<usize>::new(ys.clone(), vec![5]);
+    let weights = TensorImpl::<f32>::rand_with::<StandardNormal>(
         vec![chars.len(), chars.len()],
         &mut rng,
         StandardNormal,
     );
 
     // forward pass
-    let xenc = Tensor::<usize>::one_hot(&xs_tensor, chars.len()).map(|&a| a as f32);
+    let xenc = TensorImpl::<usize>::one_hot(&xs_tensor, chars.len()).map(|&a| a as f32);
     let intermediate = xenc.broadcast_op(&weights, &[(1, 0)], |&a, &b| a * b);
     let logits = intermediate.reduce(1, |&a, &b| a + b, false);
     // softmax layer: logits -> probs
     let counts = logits.map(|a| a.exp());
     let counts_sum_row = counts.reduce(1, |&a, &b| a + b, true);
     let probs = counts.broadcast_op(&counts_sum_row, &[(0, 0), (1, 1)], |&a, &b| a / b);
-    let mut loss = Tensor::<f32>::zeros(vec![ys.len()]);
+    let mut loss = TensorImpl::<f32>::zeros(vec![ys.len()]);
     (0..xs.len()).zip(ys.iter()).for_each(|(x_idx, &y)| {
         loss[&[x_idx]] = probs[&[x_idx, y]];
     });

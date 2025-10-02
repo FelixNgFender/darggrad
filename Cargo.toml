@@ -1,10 +1,3 @@
 [workspace]
 resolver = "3"
-members = [
-  "ukiyo-autograd",
-  "ukiyo-cpu",
-  "ukiyo-nn",
-  "ukiyo-tensor",
-  "ukiyo-wortschmied",
-  "ukiyo-ziink",
-]
+members = ["ukiyo-nn", "ukiyo-tensor", "ukiyo-wortschmied", "ukiyo-ziink"]

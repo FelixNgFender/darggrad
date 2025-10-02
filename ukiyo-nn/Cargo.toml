@@ -6,4 +6,4 @@ edition = "2024"
 [dependencies]
 rand = "0.9.2"
 rand_distr = "0.5.1"
-ukiyo-autograd = { path = "../ukiyo-autograd" }
+ukiyo-tensor = { path = "../ukiyo-tensor" }

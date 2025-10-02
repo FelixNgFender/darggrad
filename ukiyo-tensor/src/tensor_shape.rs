@@ -3,7 +3,7 @@ use std::{
     ops::RangeInclusive,
 };
 
-#[derive(Debug, Clone)]
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub(crate) struct TensorShape {
     /// An n-tuple that represents the length of each dimension in the tensor.
     pub(crate) shape: Vec<usize>,
@@ -30,7 +30,7 @@ impl TensorShape {
         self.shape.iter().product()
     }
 
-    pub(crate) fn dim(&self) -> usize {
+    pub(crate) fn ndim(&self) -> usize {
         self.shape.len()
     }
 
@@ -38,7 +38,7 @@ impl TensorShape {
         self.shape.is_empty()
     }
 
-    fn is_vector(&self) -> bool {
+    pub(crate) fn is_vector(&self) -> bool {
         self.shape.len() == 1
     }
 

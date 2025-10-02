@@ -1,5 +1,9 @@
-pub(crate) mod tensor_shape;
-pub(crate) mod tensor_storage;
+mod op;
+mod tensor;
+mod tensor_impl;
+mod tensor_shape;
+mod tensor_storage;
 
-pub mod tensor;
+pub use op::*;
 pub use tensor::Tensor;
+pub use tensor_impl::TensorImpl;

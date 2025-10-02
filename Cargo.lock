@@ -1354,15 +1354,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 
 [[package]]
-name = "ordered-float"
-version = "5.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2c1f9f56e534ac6a9b8a4600bdf0f530fb393b5f393e7b4d03489c3cf0c3f01"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
 name = "parking"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2866,23 +2857,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
-name = "ukiyo-autograd"
-version = "0.1.0"
-dependencies = [
- "ordered-float",
-]
-
-[[package]]
-name = "ukiyo-cpu"
-version = "0.1.0"
-
-[[package]]
 name = "ukiyo-nn"
 version = "0.1.0"
 dependencies = [
  "rand",
  "rand_distr",
- "ukiyo-autograd",
+ "ukiyo-tensor",
 ]
 
 [[package]]
